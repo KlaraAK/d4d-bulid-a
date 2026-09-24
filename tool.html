@@ -124,16 +124,23 @@
         primaryAction.textContent = 'Place hold';
         primaryAction.disabled = false;
         primaryAction.className = 'inline-flex items-center justify-center rounded-sm bg-accent px-lg py-sm text-base font-medium text-accent-ink transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink';
+        primaryAction.onclick = () => {
+          window.location.href = `confirmation.html?id=${tool.id}`;
+        };
         repairNote.textContent = '';
       } else if (tool.availability === 'checked_out') {
         primaryAction.textContent = 'Join waitlist';
         primaryAction.disabled = false;
         primaryAction.className = 'inline-flex items-center justify-center rounded-sm bg-accent px-lg py-sm text-base font-medium text-accent-ink transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink';
+        primaryAction.onclick = () => {
+          window.location.href = `confirmation.html?id=${tool.id}`;
+        };
         repairNote.textContent = '';
       } else if (tool.availability === 'repair') {
         primaryAction.textContent = 'Unavailable';
         primaryAction.disabled = true;
         primaryAction.className = 'inline-flex items-center justify-center rounded-sm bg-disabled px-lg py-sm text-base font-medium text-disabled-ink transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink';
+        primaryAction.onclick = null;
         repairNote.textContent = 'This tool is out for repair.';
       }
     }

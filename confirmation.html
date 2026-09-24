@@ -10,6 +10,74 @@
   <link rel="stylesheet" href="dist/styles.css">
 </head>
 <body class="min-h-screen bg-surface font-body text-ink antialiased">
-  <!-- Screen 3: Hold confirmation. Build this screen against SPEC.md. -->
+  <main class="mx-auto max-w-3xl px-md py-lg md:px-xl md:py-xl">
+    <article class="rounded-card border border-border bg-surface-raised p-lg shadow-sm">
+      <p class="text-xs font-medium uppercase tracking-wide text-ink-muted">Hold confirmed</p>
+      <h1 id="tool-name" class="mt-sm font-display text-xl leading-tight text-ink"></h1>
+
+      <p class="mt-lg text-base text-ink">Pickup window: <span class="font-medium">within 3 days</span></p>
+
+      <div class="mt-lg rounded-card border border-border bg-surface p-md">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-muted">What to bring</h2>
+        <ul id="bring-list" class="mt-sm list-disc space-y-sm pl-lg text-base text-ink"></ul>
+      </div>
+
+      <div class="mt-lg">
+        <a href="index.html" class="inline-flex items-center rounded-sm bg-accent px-lg py-sm text-base font-medium text-accent-ink transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2">Back to catalog</a>
+      </div>
+    </article>
+  </main>
+
+  <script>
+    const toolName = document.getElementById('tool-name');
+    const bringList = document.getElementById('bring-list');
+
+    const params = new URLSearchParams(window.location.search);
+    const toolId = params.get('id');
+
+    fetch('./data/tools.json')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Unable to load tool data');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const tool = data.tools.find((item) => item.id === toolId);
+
+        if (!tool) {
+          throw new Error('Tool not found');
+        }
+
+        toolName.textContent = tool.name;
+
+        const items = [];
+        if (tool.members_only) {
+          items.push('Membership card');
+        }
+        if (tool.deposit > 0) {
+          items.push(`Deposit of $${tool.deposit}`);
+        }
+        if (tool.requires_orientation) {
+          items.push('Proof of orientation');
+        }
+
+        if (items.length === 0) {
+          items.push('Your library card');
+        }
+
+        bringList.innerHTML = '';
+        items.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          bringList.appendChild(li);
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        toolName.textContent = 'Tool unavailable';
+        bringList.innerHTML = '<li>Return to the catalog and choose another item.</li>';
+      });
+  </script>
 </body>
 </html>
