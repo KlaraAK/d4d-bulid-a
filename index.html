@@ -24,5 +24,33 @@
     </div>
   </header>
   <!-- Screen 1: Catalog. Build this screen against SPEC.md. -->
+  <main class="mx-auto max-w-6xl px-md py-lg md:px-xl md:py-xl">
+    <section aria-label="Catalog filters" class="rounded-card border border-border bg-surface-raised p-md shadow-sm md:p-lg">
+      <div class="flex flex-col gap-md md:flex-row md:items-end">
+        <div class="flex-1">
+          <label for="category-filter" class="mb-xs block text-sm font-medium text-ink">Category</label>
+          <select id="category-filter" name="category" class="w-full rounded-sm border border-border bg-surface px-sm py-xs text-base text-ink shadow-none outline-none transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2">
+            <option value="all">All</option>
+            <option value="hand-tools">Hand tools</option>
+            <option value="power-tools">Power tools</option>
+            <option value="yard">Yard</option>
+            <option value="plumbing">Plumbing</option>
+            <option value="automotive">Automotive</option>
+            <option value="ladders">Ladders</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-sm md:pb-1">
+          <input id="available-only" name="availableOnly" type="checkbox" class="h-4 w-4 rounded-sm border border-border accent-accent" aria-label="Available only" />
+          <label for="available-only" class="text-sm font-medium text-ink">Available only</label>
+        </div>
+
+        <div class="flex-1">
+          <label for="name-filter" class="mb-xs block text-sm font-medium text-ink">Search by tool name</label>
+          <input id="name-filter" name="name" type="text" placeholder="Search by tool name" class="w-full rounded-sm border border-border bg-surface px-sm py-xs text-base text-ink placeholder:text-ink-muted outline-none transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2" />
+        </div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
