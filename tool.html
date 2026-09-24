@@ -10,6 +10,168 @@
   <link rel="stylesheet" href="dist/styles.css">
 </head>
 <body class="min-h-screen bg-surface font-body text-ink antialiased">
-  <!-- Screen 2: Tool detail. Build this screen against SPEC.md. -->
+  <main class="mx-auto max-w-5xl px-md py-lg md:px-xl md:py-xl">
+    <a href="index.html" class="mb-lg inline-flex items-center text-sm font-medium text-accent hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2">Back to catalog</a>
+
+    <article id="tool-detail" class="overflow-hidden rounded-card border border-border bg-surface-raised shadow-sm">
+      <div class="flex flex-col gap-lg p-md md:flex-row md:p-lg">
+        <div class="flex w-full items-center justify-center rounded-card bg-surface p-lg md:w-80">
+          <img id="tool-icon" src="" alt="" class="h-32 w-32 object-contain" />
+        </div>
+
+        <div class="flex-1 space-y-lg">
+          <div class="space-y-sm">
+            <p id="tool-category" class="text-xs font-medium uppercase tracking-wide text-ink-muted"></p>
+            <h1 id="tool-name" class="font-display text-xl leading-tight text-ink"></h1>
+          </div>
+
+          <p id="tool-summary" class="text-base leading-relaxed text-ink"></p>
+
+          <div class="rounded-card border border-border bg-surface p-md">
+            <div class="flex items-center gap-sm">
+              <span id="tool-status" class="inline-flex items-center rounded-full px-sm py-xs text-xs font-medium"></span>
+            </div>
+
+            <p id="tool-due-back" class="mt-sm text-sm text-ink-muted"></p>
+          </div>
+
+          <div class="space-y-md">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-muted">Access</h2>
+            <ul id="tool-flags" class="space-y-sm text-sm leading-relaxed text-ink"></ul>
+          </div>
+
+          <div class="space-y-sm">
+            <button id="primary-action" type="button" class="inline-flex items-center justify-center rounded-sm bg-accent px-lg py-sm text-base font-medium text-accent-ink transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink"></button>
+            <p id="repair-note" class="text-sm text-ink-muted"></p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <script>
+    const toolStatus = document.getElementById('tool-status');
+    const toolDueBack = document.getElementById('tool-due-back');
+    const toolCategory = document.getElementById('tool-category');
+    const toolName = document.getElementById('tool-name');
+    const toolSummary = document.getElementById('tool-summary');
+    const toolIcon = document.getElementById('tool-icon');
+    const toolFlags = document.getElementById('tool-flags');
+    const primaryAction = document.getElementById('primary-action');
+    const repairNote = document.getElementById('repair-note');
+
+    const statusClasses = {
+      available: 'bg-status-available-bg text-status-available',
+      checked_out: 'bg-status-hold-bg text-status-hold',
+      repair: 'bg-status-repair-bg text-status-repair'
+    };
+
+    const statusLabels = {
+      available: 'Available',
+      checked_out: 'Checked out',
+      repair: 'Out for repair'
+    };
+
+    function formatDate(dateString) {
+      const date = new Date(dateString + 'T00:00:00');
+      return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(date);
+    }
+
+    function renderDetail(tool, categoryMap) {
+      const categoryLabel = categoryMap.get(tool.category) || tool.category;
+
+      toolCategory.textContent = categoryLabel;
+      toolName.textContent = tool.name;
+      toolSummary.textContent = tool.summary;
+      toolIcon.src = `images/${tool.category}.svg`;
+      toolIcon.alt = `${categoryLabel} icon`;
+
+      toolStatus.textContent = statusLabels[tool.availability] || 'Available';
+      toolStatus.className = `inline-flex items-center rounded-full px-sm py-xs text-xs font-medium ${statusClasses[tool.availability] || 'bg-surface text-ink-muted'}`;
+
+      if (tool.availability === 'checked_out' && tool.due_back) {
+        toolDueBack.textContent = `Due back ${formatDate(tool.due_back)}`;
+      } else {
+        toolDueBack.textContent = '';
+      }
+
+      const flags = [];
+      if (tool.members_only) {
+        flags.push({ label: 'Members only', detail: 'Sixth Ward membership is required to borrow this tool.' });
+      }
+      if (tool.requires_orientation) {
+        flags.push({ label: 'Orientation required', detail: 'A 20-minute safety orientation is required before first checkout.' });
+      }
+      if (tool.deposit > 0) {
+        flags.push({ label: 'Deposit', detail: `A $${tool.deposit} refundable deposit is held at pickup.` });
+      }
+
+      toolFlags.innerHTML = '';
+      if (flags.length === 0) {
+        const item = document.createElement('li');
+        item.textContent = 'No special access requirements.';
+        toolFlags.appendChild(item);
+      } else {
+        flags.forEach((flag) => {
+          const item = document.createElement('li');
+          item.className = 'flex gap-sm';
+          item.innerHTML = `<span class="font-medium text-ink">${flag.label}:</span> <span class="text-ink">${flag.detail}</span>`;
+          toolFlags.appendChild(item);
+        });
+      }
+
+      if (tool.availability === 'available') {
+        primaryAction.textContent = 'Place hold';
+        primaryAction.disabled = false;
+        primaryAction.className = 'inline-flex items-center justify-center rounded-sm bg-accent px-lg py-sm text-base font-medium text-accent-ink transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink';
+        repairNote.textContent = '';
+      } else if (tool.availability === 'checked_out') {
+        primaryAction.textContent = 'Join waitlist';
+        primaryAction.disabled = false;
+        primaryAction.className = 'inline-flex items-center justify-center rounded-sm bg-accent px-lg py-sm text-base font-medium text-accent-ink transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink';
+        repairNote.textContent = '';
+      } else if (tool.availability === 'repair') {
+        primaryAction.textContent = 'Unavailable';
+        primaryAction.disabled = true;
+        primaryAction.className = 'inline-flex items-center justify-center rounded-sm bg-disabled px-lg py-sm text-base font-medium text-disabled-ink transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink';
+        repairNote.textContent = 'This tool is out for repair.';
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const toolId = params.get('id');
+
+    fetch('./data/tools.json')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Unable to load tool data');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const categoryMap = new Map(data.categories.map((category) => [category.id, category.label]));
+        const tool = data.tools.find((item) => item.id === toolId);
+
+        if (!tool) {
+          throw new Error('Tool not found');
+        }
+
+        renderDetail(tool, categoryMap);
+      })
+      .catch((error) => {
+        console.error(error);
+        toolName.textContent = 'Tool not found';
+        toolSummary.textContent = 'The requested tool is unavailable.';
+        toolCategory.textContent = 'Catalog';
+        toolDueBack.textContent = '';
+        toolFlags.innerHTML = '';
+        primaryAction.textContent = 'Back to catalog';
+        primaryAction.disabled = false;
+        primaryAction.onclick = () => {
+          window.location.href = 'index.html';
+        };
+        repairNote.textContent = '';
+      });
+  </script>
 </body>
 </html>
