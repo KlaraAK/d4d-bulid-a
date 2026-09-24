@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tailwind Translation Exercise</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="p-8 bg-surface">
+
+  <!-- Translated from tool-card.css -->
+  <div class="flex flex-col gap-3 p-4 rounded-[10px] border border-line bg-surface transition-shadow duration-150 ease-out hover:shadow-md focus-within:outline-2">
+    <img class="w-12 h-12" src="" alt="" />
+    <p class="text-[13px] text-[#6b6b6b] uppercase tracking-wide">Category</p>
+    <h3 class="text-base font-semibold text-ink">Tool name</h3>
+    <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[13px] font-medium">Badge</span>
+    <p class="text-sm text-[#6b6b6b]">Meta line</p>
+  </div>
+
+  <!--
+    The hardest declaration to translate was color: #6b6b6b, used on both
+    the category label and the meta line. Since it isn't one of the
+    theme's existing color tokens, it had to be bracketed as
+    text-[#6b6b6b] instead of using a clean utility name. Because the
+    same value repeats more than once, it's really a missing token
+    rather than a one-off value, and it should probably be added to the
+    @theme block instead of bracketed.
+  -->
+
+</body>
+</html>
