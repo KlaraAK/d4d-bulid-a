@@ -155,16 +155,20 @@
         const categoryLabel = categories.find((category) => category.id === tool.category)?.label || tool.category;
 
         const card = document.createElement('article');
-        card.className = 'rounded-card border border-border bg-surface-raised p-md shadow-sm';
+        card.className = 'overflow-hidden rounded-card border border-border bg-surface-raised shadow-sm';
+
+        const imageArea = document.createElement('div');
+        imageArea.className = 'flex h-40 w-full items-center justify-center bg-surface';
 
         const icon = document.createElement('img');
         icon.src = `images/${tool.category}.svg`;
         icon.alt = `${categoryLabel} icon`;
-        icon.className = 'h-12 w-12 rounded-sm object-contain';
+        icon.className = 'h-16 w-16 object-contain';
 
-        const iconWrap = document.createElement('div');
-        iconWrap.className = 'mb-sm';
-        iconWrap.appendChild(icon);
+        imageArea.appendChild(icon);
+
+        const content = document.createElement('div');
+        content.className = 'flex flex-col gap-sm p-md';
 
         const label = document.createElement('p');
         label.className = 'text-xs font-medium uppercase tracking-wide text-ink-muted';
@@ -179,10 +183,11 @@
         badge.textContent = statusLabels[tool.availability] || 'Available';
 
         const metaLine = document.createElement('p');
-        metaLine.className = 'mt-sm text-sm text-ink-muted';
+        metaLine.className = 'text-sm text-ink-muted';
         metaLine.textContent = getMetaLine(tool);
 
-        card.append(iconWrap, label, name, badge, metaLine);
+        content.append(label, name, badge, metaLine);
+        card.append(imageArea, content);
         toolGrid.appendChild(card);
       });
     }
