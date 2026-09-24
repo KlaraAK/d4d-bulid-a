@@ -29,15 +29,7 @@
       <div class="flex flex-col gap-md md:flex-row md:items-end">
         <div class="flex-1">
           <label for="category-filter" class="mb-xs block text-sm font-medium text-ink">Category</label>
-          <select id="category-filter" name="category" class="w-full rounded-sm border border-border bg-surface px-sm py-xs text-base text-ink shadow-none outline-none transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2">
-            <option value="all">All</option>
-            <option value="hand-tools">Hand tools</option>
-            <option value="power-tools">Power tools</option>
-            <option value="yard">Yard</option>
-            <option value="plumbing">Plumbing</option>
-            <option value="automotive">Automotive</option>
-            <option value="ladders">Ladders</option>
-          </select>
+          <select id="category-filter" name="category" class="w-full rounded-sm border border-border bg-surface px-sm py-xs text-base text-ink shadow-none outline-none transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2"></select>
         </div>
 
         <div class="flex items-center gap-sm md:pb-1">
@@ -51,6 +43,171 @@
         </div>
       </div>
     </section>
+
+    <div class="mt-lg">
+      <p id="result-count" class="text-sm font-medium text-ink" aria-live="polite">0 tools</p>
+      <div id="tool-grid" class="tool-grid mt-md grid grid-cols-1 gap-md" aria-live="polite"></div>
+    </div>
   </main>
+
+  <style>
+    .tool-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    @media (min-width: 90rem) {
+      .tool-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+  </style>
+
+  <script>
+    const categoryFilter = document.getElementById('category-filter');
+    const availableOnlyToggle = document.getElementById('available-only');
+    const nameFilter = document.getElementById('name-filter');
+    const resultCount = document.getElementById('result-count');
+    const toolGrid = document.getElementById('tool-grid');
+
+    const categories = [];
+    let allTools = [];
+
+    const statusClasses = {
+      available: 'bg-status-available-bg text-status-available',
+      checked_out: 'bg-status-hold-bg text-status-hold',
+      repair: 'bg-status-repair-bg text-status-repair'
+    };
+
+    const statusLabels = {
+      available: 'Available',
+      checked_out: 'Checked out',
+      repair: 'Out for repair'
+    };
+
+    function formatDate(dateString) {
+      const date = new Date(dateString + 'T00:00:00');
+      return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(date);
+    }
+
+    function getMetaLine(tool) {
+      if (tool.availability === 'checked_out' && tool.due_back) {
+        return `Due back ${formatDate(tool.due_back)}`;
+      }
+
+      if (tool.availability === 'repair') {
+        return 'Currently unavailable';
+      }
+
+      const flags = [];
+      if (tool.members_only) flags.push('Members only');
+      if (tool.requires_orientation) flags.push('Orientation required');
+      if (tool.deposit > 0) flags.push(`Deposit $${tool.deposit}`);
+
+      if (flags.length > 0) {
+        return flags.join('. ');
+      }
+
+      return 'No deposit';
+    }
+
+    function populateCategories(data) {
+      categoryFilter.innerHTML = '';
+
+      data.categories.forEach((category) => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.label;
+        categoryFilter.appendChild(option);
+      });
+
+      categories.length = 0;
+      categories.push(...data.categories);
+    }
+
+    function getVisibleTools() {
+      const selectedCategory = categoryFilter.value;
+      const searchTerm = nameFilter.value.trim().toLowerCase();
+
+      return allTools.filter((tool) => {
+        if (selectedCategory !== 'all' && tool.category !== selectedCategory) {
+          return false;
+        }
+
+        if (availableOnlyToggle.checked && tool.availability !== 'available') {
+          return false;
+        }
+
+        if (searchTerm && !tool.name.toLowerCase().includes(searchTerm)) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    function renderTools() {
+      const visibleTools = getVisibleTools();
+      resultCount.textContent = `${visibleTools.length} tool${visibleTools.length === 1 ? '' : 's'}`;
+
+      toolGrid.innerHTML = '';
+
+      visibleTools.forEach((tool) => {
+        const categoryLabel = categories.find((category) => category.id === tool.category)?.label || tool.category;
+
+        const card = document.createElement('article');
+        card.className = 'rounded-card border border-border bg-surface-raised p-md shadow-sm';
+
+        const icon = document.createElement('img');
+        icon.src = `images/${tool.category}.svg`;
+        icon.alt = `${categoryLabel} icon`;
+        icon.className = 'h-12 w-12 rounded-sm object-contain';
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'mb-sm';
+        iconWrap.appendChild(icon);
+
+        const label = document.createElement('p');
+        label.className = 'text-xs font-medium uppercase tracking-wide text-ink-muted';
+        label.textContent = categoryLabel;
+
+        const name = document.createElement('h2');
+        name.className = 'text-lg font-semibold text-ink';
+        name.textContent = tool.name;
+
+        const badge = document.createElement('span');
+        badge.className = `inline-flex w-fit items-center rounded-full px-sm py-xs text-xs font-medium ${statusClasses[tool.availability] || 'bg-surface text-ink-muted'}`;
+        badge.textContent = statusLabels[tool.availability] || 'Available';
+
+        const metaLine = document.createElement('p');
+        metaLine.className = 'mt-sm text-sm text-ink-muted';
+        metaLine.textContent = getMetaLine(tool);
+
+        card.append(iconWrap, label, name, badge, metaLine);
+        toolGrid.appendChild(card);
+      });
+    }
+
+    fetch('./data/tools.json')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Unable to load catalog data');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        populateCategories(data);
+        allTools = data.tools.filter((tool) => tool.availability !== 'retired');
+        categoryFilter.value = 'all';
+        renderTools();
+      })
+      .catch((error) => {
+        console.error(error);
+        resultCount.textContent = 'Unable to load tools';
+      });
+
+    categoryFilter.addEventListener('change', renderTools);
+    availableOnlyToggle.addEventListener('change', renderTools);
+    nameFilter.addEventListener('input', renderTools);
+  </script>
 </body>
 </html>
